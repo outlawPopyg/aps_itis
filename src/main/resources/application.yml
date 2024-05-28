@@ -1,0 +1,20 @@
+ai:
+    url: http://192.168.84.177:5000/v1/chat/completions
+
+server:
+    port: 8081
+
+spring:
+    freemarker:
+        suffix: .ftl
+    jpa:
+        hibernate:
+            ddl-auto: validate
+    liquibase:
+        change-log: classpath:db/changelog/master.xml
+
+    datasource:
+        driver-class-name: org.postgresql.Driver
+        url: jdbc:postgresql://localhost:5432/postgres
+        username: postgres
+        password: postgres
