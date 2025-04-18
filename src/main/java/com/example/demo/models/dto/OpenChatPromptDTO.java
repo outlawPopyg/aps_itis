@@ -14,9 +14,9 @@ public class OpenChatPromptDTO {
     @JsonProperty("instruction_template")
     private String instructionTemplate = "Alpaca";
 
-    private String mode = "instruct";
+    private String mode = "chat-instruct";
 
-    private double temperature = 0.7;
+    private double temperature = 0.1;
 
     public static OpenChatPromptDTO createPrompt(String prompt) {
         OpenChatPromptDTO openChatPromptDTO = new OpenChatPromptDTO();

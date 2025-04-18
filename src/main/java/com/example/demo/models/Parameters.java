@@ -27,6 +27,12 @@ public class Parameters {
 	@Column(name = "description")
 	private String description;
 
+	@Column(name = "example_req")
+	private String exampleRequest;
+
+	@Column(name = "example_resp")
+	private String exampleResponse;
+
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "parent_id")
 	private Parameters parent;

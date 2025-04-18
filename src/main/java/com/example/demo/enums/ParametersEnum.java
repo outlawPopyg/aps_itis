@@ -8,6 +8,8 @@ import lombok.Getter;
 public enum ParametersEnum implements BaseEnum {
 	CONTEXT("1"),
 	FIELDS("2"),
+	EXAMPLES("EXAMPLE"),
+
 	SMP("3"),
 	POLICE("4"),
 

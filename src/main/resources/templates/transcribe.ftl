@@ -78,24 +78,33 @@
 
 <body>
 
+<script>
+    let list = [];
+    <#list fields as field>
+    list.push({name: "${field.name}", description: "${field.description}"})
+    </#list>
+</script>
 <div>
     <div class="controls">
         <button onclick="initWebSocket()">Connect</button>
     </div>
 
-    <button id="startButton" onclick='startRecording()' disabled>Начать разговор</button>
-    <button id="stopButton"  onclick="stopRecording(`${prompt}`, `${serializedFields}`)" disabled>Закончить разговор</button>
+    <button id="startButton" onclick='startRecording(list)' disabled>Начать разговор</button>
+    <button id="stopButton" onclick='stopRecording(`${prompt}`, `${serializedFields}`)' disabled>Закончить разговор
+    </button>
     <div id="transcription"></div>
     <br/>
 
     <#list fields as field>
-        <div>${field.description}: <b id="${field.name}"></b></div>
-        <br />
+        <label for="${field.name}">${field.description}: </label>
+        <select name="combobox" id="${field.name}">
+
+        </select>
+
+        <br><br><br>
     </#list>
 
 </div>
-
-
 
 
 </body>

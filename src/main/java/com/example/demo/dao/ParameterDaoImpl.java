@@ -1,6 +1,5 @@
 package com.example.demo.dao;
 
-import com.example.demo.enums.ParametersEnum;
 import com.example.demo.models.Parameters;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;

@@ -1,5 +1,3 @@
-
-
 let websocket;
 let appServerWebSocket;
 let context;
@@ -10,6 +8,7 @@ const websocket_uri = 'ws://192.168.84.177:8765';
 const applicationServerWebsocketURI = "http://localhost:8081/websocket";
 const bufferSize = 4096;
 let isRecording = false;
+let globalEntities;
 
 function initWebSocket() {
     const websocketAddress = "ws://192.168.84.177:8765";
@@ -88,17 +87,40 @@ function updateTranscription(transcript_data) {
         transcriptionDiv.textContent += transcript_data['text'] + '\n';
     }
 
+    fetch(`http://192.168.84.177:8000/extract`, {
+        method: "POST",
+        headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({text: transcriptionDiv.textContent, entities: globalEntities})
+    }).then(res => res.json())
+        .then(entities => {
+
+            entities.forEach(e => {
+                let combobox = document.querySelector(`select[id="${e.name}"]`);
+                const options = Array.from(combobox.options).map(o => o.text);
+
+                if (e.value !== undefined && e.value !== '' && options.every(o => o !== e.value)) {
+                    console.log(e.value)
+                    combobox.add(new Option(e.value, e.name, true, false));
+                }
+            });
+
+        })
+
 }
 
 
-function startRecording() {
+function startRecording(entities) {
+    globalEntities = entities;
     if (isRecording) return;
     isRecording = true;
 
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     context = new AudioContext();
 
-    navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+    navigator.mediaDevices.getUserMedia({audio: true}).then(stream => {
         globalStream = stream;
         const input = context.createMediaStreamSource(stream);
         processor = context.createScriptProcessor(bufferSize, 1, 1);
@@ -109,7 +131,6 @@ function startRecording() {
         sendAudioConfig();
     }).catch(error => console.error('Error accessing microphone', error));
 
-    // Disable start button and enable stop button
     document.getElementById('startButton').disabled = true;
     document.getElementById('stopButton').disabled = false;
 }
@@ -117,9 +138,8 @@ function startRecording() {
 function stopRecording(prompt, serializedFields) {
 
     let fields = serializedFields.split(",");
-
-    const newPrompt = `${prompt} \n ${document.getElementById("transcription").textContent}`
-
+    let newPrompt = prompt.replace("{TEXT}", document.getElementById("transcription").textContent)
+    newPrompt = newPrompt.replace("{EXAMPLES}", "");
     fetch(`/home/gpt`, {
         method: "POST",
         headers: {
@@ -129,10 +149,62 @@ function stopRecording(prompt, serializedFields) {
         body: newPrompt
     }).then(res => res.json())
         .then(res => {
-            fields.forEach(field => {
-                document.getElementById(field).textContent = res[field]
+            fields.forEach(e => {
+
+                let combobox = document.querySelector(`select[id="${e}"]`);
+                const options = Array.from(combobox.options).map(o => o.text);
+
+                if (Array.isArray(res[e])) {
+                    res[e].forEach(r => {
+                        if (r.value !== undefined && r.value !== '' && options.every(o => o !== r)) {
+                            console.log(r.value)
+                            combobox.add(new Option(res[e], e, true, false));
+                        }
+                    })
+                } else {
+                    if (res[e] !== undefined && res[e] !== '' && options.every(o => o !== res[e])) {
+                        console.log(res[e])
+                        combobox.add(new Option(res[e], e, true, false));
+                    }
+                }
+
+
             })
-        })
+        }).finally(() => {
+
+        let allOpts = Array.from(document.querySelectorAll(`option`)).map(o => ({
+            name: o.value,
+            value: capitalizeWords(o.text)
+        }));
+
+
+        fetch("http://192.168.84.177:8001/link_entities", {
+            method: "POST",
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(allOpts)
+        }).then(res => res.json())
+            .then(res => {
+                let groupBy = Object.groupBy(res, ({label}) => label);
+
+                let sorted = allOpts.sort((a, b) => {
+                    let number = getItems(b.value, groupBy).length - getItems(a.value, groupBy).length;
+                    console.log(number)
+                    return number;
+                });
+
+                document.querySelectorAll('select').forEach(s => s.innerHTML = '');
+                sorted.forEach(s => {
+                    let combobox = document.querySelector(`select[id="${s.name}"]`);
+                    combobox.add(new Option(s.value, s.name, true, false));
+                })
+
+            })
+
+        globalEntities = [];
+    });
 
     if (!isRecording) return;
     isRecording = false;
@@ -149,6 +221,26 @@ function stopRecording(prompt, serializedFields) {
     }
     document.getElementById('startButton').disabled = false;
     document.getElementById('stopButton').disabled = true;
+
+}
+
+function getItems(key, partial) {
+    let items = [];
+    for (const [label, items] of Object.entries(partial)) {
+        if (label === key) {
+            return items;
+        }
+    }
+
+    return items;
+}
+
+function capitalizeWords(str) {
+    return str
+        .toLowerCase()
+        .split(/\s+/)
+        .map(word => word ? word[0].toUpperCase() + word.slice(1) : '')
+        .join(' ');
 }
 
 function sendAudioConfig() {
@@ -169,7 +261,7 @@ function sendAudioConfig() {
             bufferSize: bufferSize,
             channels: 1, // Assuming mono channel
             language: language,
-            processing_strategy: selectedStrategy, 
+            processing_strategy: selectedStrategy,
             processing_args: processingArgs
         }
     };
@@ -207,7 +299,7 @@ function processAudio(e) {
     const left = e.inputBuffer.getChannelData(0);
     const downsampledBuffer = downsampleBuffer(left, inputSampleRate, outputSampleRate);
     const audioData = convertFloat32ToInt16(downsampledBuffer);
-    
+
     if (websocket && websocket.readyState === WebSocket.OPEN) {
         websocket.send(audioData);
     }

@@ -27,7 +27,9 @@
     <changeSet id="002_add_parent_parameters_v2" author="k.ahmetchin" dbms="postgresql">
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">
-                select count(*) from parameters where code in ('1', '2')
+                select count(*)
+                from parameters
+                where code in ('1', '2')
             </sqlCheck>
         </preConditions>
         <sql>
@@ -40,7 +42,9 @@
     <changeSet id="003_add_child_parameters_v2" author="k.ahmetchin" dbms="postgresql">
         <preConditions onFail="MARK_RAN">
             <sqlCheck expectedResult="0">
-                select count(*) from parameters where code in ('3', '4', '5', '6')
+                select count(*)
+                from parameters
+                where code in ('3', '4', '5', '6')
             </sqlCheck>
         </preConditions>
         <sql>
@@ -53,6 +57,43 @@
 
                    ('5', 'fio', 'ФИО', (select id from parameters where code = '2')),
                    ('6', 'address', 'Адрес', (select id from parameters where code = '2'));
+        </sql>
+    </changeSet>
+
+    <changeSet id="004_add_example_for_learning_v2" author="k.ahmetchin" dbms="postgresql">
+        <sql>
+            alter table parameters
+                add column if not exists example_req varchar(512);
+            alter table parameters
+                add column if not exists example_resp varchar(128);
+        </sql>
+    </changeSet>
+
+    <changeSet id="005_insert_example_for_learning_v3" author="k.ahmetchin" dbms="postgresql">
+        <sql>
+            insert into parameters (code, name, description, parent_id)
+            select 'EXAMPLE', 'Примеры', 'Примеры для обучения', null
+            where not exists(select * from parameters where code = 'EXAMPLE');
+        </sql>
+    </changeSet>
+
+    <changeSet id="006_fill_example" author="k.ahmetchin" dbms="postgresql">
+        <sql>
+            update parameters
+            set description = 'Пример:
+Текст: "Иванов Иван родился 15 мая 1990 года и работает в компании Яндекс по адресу Москва, ул. Льва Толстого, 16."
+Ответ:
+{
+"PER": ["Иванов Иван"],
+"DATE": ["15 мая 1990 года"],
+"ORG": ["Яндекс"],
+"ADDR": ["Москва, ул. Льва Толстого, 16"]
+}
+
+{EXAMPLES}
+'
+            where code = 'EXAMPLE'
+              and description is null;
         </sql>
     </changeSet>
 
