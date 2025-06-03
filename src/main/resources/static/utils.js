@@ -9,6 +9,7 @@ const applicationServerWebsocketURI = "http://localhost:8081/websocket";
 const bufferSize = 4096;
 let isRecording = false;
 let globalEntities;
+let entitiesToReport;
 
 function initWebSocket() {
     const websocketAddress = "ws://192.168.84.177:8765";
@@ -113,6 +114,7 @@ function updateTranscription(transcript_data) {
 
 
 function startRecording(entities) {
+    document.getElementById("report").classList.add("hidden");
     globalEntities = entities;
     if (isRecording) return;
     isRecording = true;
@@ -172,7 +174,7 @@ function stopRecording(prompt, serializedFields) {
             })
         }).finally(() => {
 
-        let allOpts = Array.from(document.querySelectorAll(`option`)).map(o => ({
+        let allOpts = Array.from(document.querySelectorAll(`select[name="combobox"] > option`)).map(o => ({
             name: o.value,
             value: capitalizeWords(o.text)
         }));
@@ -195,14 +197,19 @@ function stopRecording(prompt, serializedFields) {
                     return number;
                 });
 
-                document.querySelectorAll('select').forEach(s => s.innerHTML = '');
+                document.querySelectorAll('select[name="combobox"]').forEach(s => s.innerHTML = '');
                 sorted.forEach(s => {
                     let combobox = document.querySelector(`select[id="${s.name}"]`);
-                    combobox.add(new Option(s.value, s.name, true, false));
+                    console.log(combobox)
+                    combobox.add(new Option(s.value, s.name, false, false));
                 })
 
             })
 
+
+        entitiesToReport = [...globalEntities];
+
+        document.getElementById("report").classList.remove("hidden");
         globalEntities = [];
     });
 
@@ -223,6 +230,81 @@ function stopRecording(prompt, serializedFields) {
     document.getElementById('stopButton').disabled = true;
 
 }
+
+// Функция генерации HTML-содержимого отчёта
+function generateReportHTML(data) {
+    let rows = data.items.map(item => `
+    <tr>
+      <td>${item.name}</td>
+      <td>${item.description}</td>
+      <td>${item.value}</td>
+    </tr>
+  `).join("");
+
+    return `
+    <div id="some_report">
+      <h1>${data.title}</h1>
+      <p><strong>Дата:</strong> ${data.date}</p>
+      <table border="1" cellspacing="0" cellpadding="5">
+        <thead>
+          <tr>
+            <th>Поле</th>
+            <th>Описание</th>
+            <th>Значение</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+// Функция скачивания отчёта
+function downloadReport() {
+    const format = document.getElementById('formatSelect').value;
+
+
+    let items = entitiesToReport.map(entity => {
+        let select = document.getElementById(entity.name);
+        let text = select.options[select.selectedIndex].text;
+        return {...entity, value: text}
+    });
+
+    const reportData = {
+        title: "Отчёт",
+        date: Date.now(),
+        items
+    };
+
+    const reportHTML = generateReportHTML(reportData);
+
+    const container = document.getElementById('reportContainer');
+    container.innerHTML = reportHTML;
+
+    if (format === 'pdf') {
+        const element = document.getElementById('some_report');
+        console.log(element)
+        const opt = {
+            margin: 10,
+            filename: 'report.pdf',
+            image: {type: 'jpeg', quality: 0.98},
+            html2canvas: {scale: 2},
+            jsPDF: {unit: 'mm', format: 'a4', orientation: 'portrait'}
+        };
+        html2pdf().set(opt).from(element).save();
+    } else if (format === 'html') {
+        const blob = new Blob([reportHTML], {type: 'text/html'});
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'report.html';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+}
+
 
 function getItems(key, partial) {
     let items = [];

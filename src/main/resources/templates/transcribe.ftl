@@ -68,11 +68,30 @@
         .hidden {
             display: none;
         }
+
+        .fields {
+            display: flex;
+
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .buttons {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
     </style>
 
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
     <script src="../stomp.js"></script>
     <script src='../utils.js'></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+          integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+            crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>
 
 </head>
 
@@ -89,20 +108,37 @@
         <button onclick="initWebSocket()">Connect</button>
     </div>
 
-    <button id="startButton" onclick='startRecording(list)' disabled>Начать разговор</button>
-    <button id="stopButton" onclick='stopRecording(`${prompt}`, `${serializedFields}`)' disabled>Закончить разговор
-    </button>
+    <div class="buttons">
+        <button id="startButton" onclick='startRecording(list)' disabled>Начать разговор</button>
+        <button id="stopButton" onclick='stopRecording(`${prompt}`, `${serializedFields}`)' disabled>Закончить разговор
+        </button>
+    </div>
+
     <div id="transcription"></div>
     <br/>
 
-    <#list fields as field>
-        <label for="${field.name}">${field.description}: </label>
-        <select name="combobox" id="${field.name}">
+    <div class="fields">
+        <#list fields as field>
+            <label for="${field.name}">${field.description}: </label>
+            <select name="combobox" id="${field.name}">
 
+            </select>
+
+            <br><br><br>
+        </#list>
+    </div>
+
+    <div id="report" class="hidden">
+        <label for="formatSelect">Выберите формат:</label>
+        <select id="formatSelect">
+            <option value="pdf">PDF</option>
+            <option value="html">HTML</option>
         </select>
+        <button onclick="downloadReport()">Скачать отчёт</button>
+    </div>
 
-        <br><br><br>
-    </#list>
+    <div id="reportContainer"></div>
+
 
 </div>
 

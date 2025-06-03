@@ -71,7 +71,7 @@
         <button type="button" class="btn btn-primary" id="context_save_btn">Сохранить</button>
     </div>
 
-<#--    --------------------------------------------------------------------------->
+    <#--    --------------------------------------------------------------------------->
     <br><br><br>
     <hr>
     <br><br><br>
@@ -131,6 +131,28 @@
         <button type="button" class="btn btn-primary" id="field_save_btn">Сохранить</button>
     </div>
 
+    <#--    --------------------------------------------------------------------------->
+
+    <br><br><br>
+    <hr>
+    <br><br><br>
+
+    <h3>Языковые модели</h3>
+    <form method="post" action="/home/settings/model">
+        <div class="models">
+
+            <label for="models"></label>
+            <select name="model" id="models">
+                <#list models as model>
+                    <option name="${model}">${model}</option>
+                </#list>
+            </select>
+
+
+            <button type="submit" class="btn btn-primary" id="model_save_btn">Сохранить</button>
+        </div>
+    </form>
+
 
 </div>
 <script>
@@ -150,10 +172,12 @@
         if (e.target.classList.contains('btn-remove')) {
             try {
                 e.target.closest('.field-group').remove();
-            } catch (e) {}
+            } catch (e) {
+            }
             try {
                 e.target.closest('.context-group').remove();
-            } catch (e) {}
+            } catch (e) {
+            }
 
         }
     });

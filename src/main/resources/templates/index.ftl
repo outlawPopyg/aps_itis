@@ -72,17 +72,21 @@
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
     <script src="../stomp.js"></script>
     <script src='../utils.js'></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+          integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+            crossorigin="anonymous"></script>
+    <script src="../report.js"></script>
 </head>
 <body>
 
-
-<div style="width: 500px; margin-top: 200px" class="mx-auto p-2 mt-100" >
+<div style="width: 500px; margin-top: 200px" class="mx-auto p-2 mt-100">
 
     <form method="post" action="/home">
         <div id="context">
-            <select name="context" class="form-select form-select-lg mb-3 mx-auto p-2" aria-label="Large select example">
+            <select name="context" class="form-select form-select-lg mb-3 mx-auto p-2"
+                    aria-label="Large select example">
                 <option selected>Выберите контекст разговора</option>
                 <#list context.children as child>
                     <option value=${child.code}>${child.name}</option>
@@ -98,13 +102,13 @@
 
             <#list fields.children as field>
                 <div class="form-check">
-                    <input name="fields" class="form-check-input" type="checkbox" value="${field.code}" id="flexCheckDefault">
+                    <input name="fields" class="form-check-input" type="checkbox" value="${field.code}"
+                           id="flexCheckDefault">
                     <label class="form-check-label" for="flexCheckDefault">
                         ${field.description}
                     </label>
                 </div>
             </#list>
-
 
 
             <div class="mx-auto p-2">
@@ -113,8 +117,6 @@
         </div>
 
     </form>
-
-
 
 </div>
 
@@ -126,6 +128,8 @@
     })
 
 </script>
+
+
 
 </body>
 </html>

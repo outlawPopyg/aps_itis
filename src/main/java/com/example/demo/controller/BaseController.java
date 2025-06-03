@@ -4,9 +4,11 @@ import com.example.demo.dao.ParameterDao;
 import com.example.demo.dao.ParametersRepository;
 import com.example.demo.enums.ParametersEnum;
 import com.example.demo.models.Parameters;
+import com.example.demo.models.dto.LoadModel;
 import com.example.demo.models.dto.OpenChatPromptDTO;
 import com.example.demo.models.dto.ParameterDTO;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -19,10 +21,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -52,6 +51,17 @@ public class BaseController {
     public String settings(Model model) {
         model.addAttribute("context", ParametersEnum.CONTEXT.getParameterValue().getChildren());
         model.addAttribute("fields", ParametersEnum.FIELDS.getParameterValue().getChildren());
+
+        JsonNode response = restTemplate
+                .getForObject("http://192.168.84.177:5000/v1/internal/model/list", JsonNode.class);
+        List<String> modelNames = new ArrayList<>();
+        if (response != null) {
+            for (JsonNode jsonNode : response.get("model_names")) {
+                modelNames.add(jsonNode.asText());
+            }
+        }
+
+        model.addAttribute("models", modelNames);
         return "settings";
     }
 
@@ -73,6 +83,22 @@ public class BaseController {
         }
 
         return "settings";
+    }
+
+    @PostMapping("/settings/model")
+    @Transactional
+    public String saveModel(@ModelAttribute(name = "model") String model) {
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+
+        LoadModel loadModel = new LoadModel();
+        loadModel.setModelName(model);
+        ObjectMapper objectMapper = new ObjectMapper();
+        ResponseEntity<JsonNode> exchange = restTemplate.exchange("http://192.168.84.177:5000/v1/internal/model/load", HttpMethod.POST,
+                new HttpEntity<>(loadModel, httpHeaders), JsonNode.class);
+
+
+        return "redirect:/home/settings";
     }
 
     @PostMapping("/settings/context")
@@ -162,7 +188,6 @@ public class BaseController {
             parametersRepository.getReferenceById(ParametersEnum.EXAMPLES.getParameterValue().getId())
                     .setDescription(exampleToSave);
         }
-
 
 
         String serializedFields = fieldParams.stream().map(ParameterDTO::getName).collect(Collectors.joining(","));

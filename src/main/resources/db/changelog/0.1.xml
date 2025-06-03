@@ -97,5 +97,13 @@
         </sql>
     </changeSet>
 
+    <changeSet id="007_alter_model" author="k.ahmetchin" dbms="postgresql">
+        <sql>
+            insert into parameters (code, name, description, parent_id)
+            select 'MODEL', 'Языковая модель', 'Языковая модель', null
+            where not exists(select * from parameters where code = 'MODEL');
+        </sql>
+    </changeSet>
+
 
 </databaseChangeLog>
