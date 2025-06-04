@@ -204,6 +204,17 @@ function stopRecording(prompt, serializedFields) {
                     combobox.add(new Option(s.value, s.name, false, false));
                 })
 
+                sorted.forEach(s => {
+                    fetch(`https://speller.yandex.net/services/spellservice.json/checkText?text=${s.value}`)
+                        .then(res => res.json())
+                        .then(res => {
+                            res.forEach(elem => {
+                                const newStr = replaceInRange(s.value, elem.pos, elem.pos + elem.len, elem.s[0])
+                                console.log(newStr);
+                            })
+                        })
+                })
+
             })
 
 
@@ -229,6 +240,10 @@ function stopRecording(prompt, serializedFields) {
     document.getElementById('startButton').disabled = false;
     document.getElementById('stopButton').disabled = true;
 
+}
+
+function replaceInRange(str, start, end, replacement) {
+    return str.substring(0, start) + replacement + str.substring(end);
 }
 
 // Функция генерации HTML-содержимого отчёта
