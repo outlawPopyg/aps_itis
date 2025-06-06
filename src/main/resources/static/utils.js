@@ -60,7 +60,44 @@ function initWebSocket() {
         stomp.send("/user/topic/voice-ai/transcribed", {}, JSON.stringify(transcript_data));
         updateTranscription(transcript_data);
     };
+
+    document.querySelectorAll('select[name="combobox"]').forEach(elem => {
+        elem.addEventListener("click", function () {
+            const id = this.id;
+            const value = this.options[this.selectedIndex].text
+            console.log("selected value: " + value)
+
+            let element = document.querySelector(`select[name="correction"][id=${id}-correction]`);
+            element.innerHTML = '';
+
+            fetch(`https://speller.yandex.net/services/spellservice.json/checkText?text=${value}`)
+                .then(res => res.json())
+                .then(res => {
+                    res.forEach(elem => {
+                        elem.s.forEach(i => {
+                            const newStr = replaceInRange(value, elem.pos, elem.pos + elem.len, i)
+                            let option = new Option(newStr, id, true, false);
+
+                            element.add(option);
+                        })
+                    })
+                })
+
+        })
+    })
+
+    document.getElementById("correct").addEventListener("click", function () {
+        document.querySelectorAll(`select[name="correction"]`).forEach(function (elem) {
+            let option = elem.options[elem.selectedIndex];
+            if (option !== undefined) {
+                document.querySelector(`select[name="combobox"][id=${option.value}]`).add(new Option(option.text, option.value, true, true));
+            }
+            elem.innerHTML = '';
+        })
+    })
+
 }
+
 
 function updateTranscription(transcript_data) {
     const transcriptionDiv = document.getElementById('transcription');
@@ -178,45 +215,6 @@ function stopRecording(prompt, serializedFields) {
             name: o.value,
             value: capitalizeWords(o.text)
         }));
-
-
-        fetch("http://192.168.84.177:8001/link_entities", {
-            method: "POST",
-            headers: {
-                "Accept": "application/json",
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(allOpts)
-        }).then(res => res.json())
-            .then(res => {
-                let groupBy = Object.groupBy(res, ({label}) => label);
-
-                let sorted = allOpts.sort((a, b) => {
-                    let number = getItems(b.value, groupBy).length - getItems(a.value, groupBy).length;
-                    console.log(number)
-                    return number;
-                });
-
-                document.querySelectorAll('select[name="combobox"]').forEach(s => s.innerHTML = '');
-                sorted.forEach(s => {
-                    let combobox = document.querySelector(`select[id="${s.name}"]`);
-                    console.log(combobox)
-                    combobox.add(new Option(s.value, s.name, false, false));
-                })
-
-                sorted.forEach(s => {
-                    fetch(`https://speller.yandex.net/services/spellservice.json/checkText?text=${s.value}`)
-                        .then(res => res.json())
-                        .then(res => {
-                            res.forEach(elem => {
-                                const newStr = replaceInRange(s.value, elem.pos, elem.pos + elem.len, elem.s[0])
-                                console.log(newStr);
-                            })
-                        })
-                })
-
-            })
-
 
         entitiesToReport = [...globalEntities];
 

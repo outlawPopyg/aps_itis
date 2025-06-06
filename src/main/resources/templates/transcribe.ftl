@@ -124,8 +124,17 @@
 
             </select>
 
+            <label for="${field.name}-correction">Исправления: </label>
+            <select name="correction" id="${field.name}-correction">
+
+            </select>
+
             <br><br><br>
         </#list>
+    </div>
+
+    <div>
+        <button id="correct" class="btn btn-primary">Исправить</button>
     </div>
 
     <div id="report" class="hidden">
